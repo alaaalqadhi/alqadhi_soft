@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Plate {
+  id                String   @id
+  plateNumber       String?
+  category          String?
+  plateType         String?
+  quantity          String?
+  reportNumber      String?
+  seizureDate       String?
+  trafficSupplyDate String?
+  vehicleModel      String?
+  supplyingEntity   String?
+  seizedItems       String?
+  actionsTaken      String?
+  entryDate         String?
+  status            String?
+  notes             String?
+
+  @@map("plates")
+}

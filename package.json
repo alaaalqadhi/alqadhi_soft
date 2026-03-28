@@ -1,0 +1,36 @@
+{
+  "name": "نظام-أرشيف-اللوحات-الرقمي---إدارة-مرور-تعز",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "prisma generate && vite build",
+    "postinstall": "prisma generate",
+    "lint": "tsc --noEmit",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/genai": "^1.40.0",
+    "@heroicons/react": "^2.2.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "@prisma/client": "^6.4.1",
+    "cors": "^2.8.6",
+    "dexie": "^4.0.8",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "html2pdf.js": "^0.14.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tsx": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "prisma": "^6.4.1",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
