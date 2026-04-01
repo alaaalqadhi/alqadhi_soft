@@ -22,8 +22,8 @@ async function check() {
   try {
     await prisma.$connect();
     console.log("✅ Database connected successfully");
-    const count = await prisma.plate.count();
-    console.log("Plates count:", count);
+    const count = await prisma.mukafahaPlate.count();
+    console.log("Mukafaha Plates count:", count);
   } catch (err) {
     console.error("❌ Database connection failed:", err);
   } finally {

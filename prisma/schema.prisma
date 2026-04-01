@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Plate {
+model MukafahaPlate {
   id                String   @id
   plateNumber       String?
   category          String?
@@ -24,5 +24,45 @@ model Plate {
   status            String?
   notes             String?
 
-  @@map("plates")
+  @@map("mukafaha_plates")
+}
+
+model BahthPlate {
+  id                String   @id
+  plateNumber       String?
+  category          String?
+  plateType         String?
+  quantity          String?
+  reportNumber      String?
+  seizureDate       String?
+  trafficSupplyDate String?
+  vehicleModel      String?
+  supplyingEntity   String?
+  seizedItems       String?
+  actionsTaken      String?
+  entryDate         String?
+  status            String?
+  notes             String?
+
+  @@map("bahth_plates")
+}
+
+model MutabaaPlate {
+  id                String   @id
+  plateNumber       String?
+  category          String?
+  plateType         String?
+  quantity          String?
+  reportNumber      String?
+  seizureDate       String?
+  trafficSupplyDate String?
+  vehicleModel      String?
+  supplyingEntity   String?
+  seizedItems       String?
+  actionsTaken      String?
+  entryDate         String?
+  status            String?
+  notes             String?
+
+  @@map("mutabaa_plates")
 }

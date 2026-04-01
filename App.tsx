@@ -25,6 +25,7 @@ import { generateArchiveSummary } from './services/geminiService';
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('isLoggedIn') === 'true');
   const [activeTab, setActiveTab] = useState<'REGISTER' | 'SEARCH'>('REGISTER');
+  const [activeEntity, setActiveEntity] = useState<'mukafaha' | 'bahth' | 'mutabaa'>('mukafaha');
   const [records, setRecords] = useState<PlateRecord[]>([]);
   const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error'>('checking');
 
@@ -71,17 +72,17 @@ const App: React.FC = () => {
     if (isLoggedIn) {
       loadAllRecords();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, activeEntity]);
 
   useEffect(() => {
-    console.log("Current records state count:", records.length);
-  }, [records]);
+    console.log(`Current ${activeEntity} records state count:`, records.length);
+  }, [records, activeEntity]);
 
   const loadAllRecords = async () => {
     try {
       if (!db.isOpen()) await db.open();
-      const all = await db.plates.reverse().toArray();
-      console.log("Fetched records from DB:", all);
+      const all = await db.plates.reverse(activeEntity).toArray();
+      console.log(`Fetched ${activeEntity} records from DB:`, all);
       setRecords(all);
     } catch (error) {
       console.error("خطأ في تحميل البيانات:", error);
@@ -190,7 +191,7 @@ const App: React.FC = () => {
       if (!db.isOpen()) await db.open();
       
       if (editingId) {
-        const result = await db.plates.update(editingId, formData);
+        const result = await db.plates.update(editingId, formData, activeEntity);
         if (result.success) {
           setEditingId(null);
           setSaveSuccess(true);
@@ -203,7 +204,7 @@ const App: React.FC = () => {
           entryDate: new Date().toISOString(),
           status: 'COMPLETED'
         };
-        const result = await db.plates.add(newRecord);
+        const result = await db.plates.add(newRecord, activeEntity);
         if (result.success) {
           setSaveSuccess(true);
           alert(result.message);
@@ -254,7 +255,7 @@ const App: React.FC = () => {
     if (window.confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) {
       setLoading(true);
       try {
-        const result = await db.plates.delete(id);
+        const result = await db.plates.delete(id, activeEntity);
         if (result.success) {
           alert(result.message);
           await loadAllRecords();
@@ -315,19 +316,42 @@ const App: React.FC = () => {
 
       {/* Navigation */}
       <nav className="bg-white border-b print:hidden sticky top-[72px] z-20 shadow-sm">
-        <div className="max-w-7xl mx-auto flex overflow-x-auto scrollbar-hide">
-          <button 
-            onClick={() => {setActiveTab('REGISTER'); setEditingId(null); setFormData(initialForm);}}
-            className={`flex items-center gap-2 px-10 py-5 font-black border-b-4 transition-all whitespace-nowrap ${activeTab === 'REGISTER' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-          >
-            <PlusCircleIcon className="w-5 h-5" /> تسجيل لوحات موردة
-          </button>
-          <button 
-            onClick={() => setActiveTab('SEARCH')}
-            className={`flex items-center gap-2 px-10 py-5 font-black border-b-4 transition-all whitespace-nowrap ${activeTab === 'SEARCH' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-          >
-            <ArchiveBoxIcon className="w-5 h-5" /> السجل العام للأرشفة ({records.length})
-          </button>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row">
+          <div className="flex overflow-x-auto scrollbar-hide border-b md:border-b-0 md:border-l">
+            <button 
+              onClick={() => {setActiveTab('REGISTER'); setEditingId(null); setFormData(initialForm);}}
+              className={`flex items-center gap-2 px-6 py-4 font-black border-b-4 transition-all whitespace-nowrap ${activeTab === 'REGISTER' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+            >
+              <PlusCircleIcon className="w-5 h-5" /> تسجيل لوحات
+            </button>
+            <button 
+              onClick={() => setActiveTab('SEARCH')}
+              className={`flex items-center gap-2 px-6 py-4 font-black border-b-4 transition-all whitespace-nowrap ${activeTab === 'SEARCH' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/30' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+            >
+              <ArchiveBoxIcon className="w-5 h-5" /> السجل العام ({records.length})
+            </button>
+          </div>
+          
+          <div className="flex overflow-x-auto scrollbar-hide bg-slate-50/50">
+            <button 
+              onClick={() => setActiveEntity('mukafaha')}
+              className={`flex items-center gap-2 px-6 py-4 font-bold transition-all whitespace-nowrap ${activeEntity === 'mukafaha' ? 'text-indigo-700 bg-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
+            >
+              قسم المكافحة
+            </button>
+            <button 
+              onClick={() => setActiveEntity('bahth')}
+              className={`flex items-center gap-2 px-6 py-4 font-bold transition-all whitespace-nowrap ${activeEntity === 'bahth' ? 'text-indigo-700 bg-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
+            >
+              قسم البحث الجنائي
+            </button>
+            <button 
+              onClick={() => setActiveEntity('mutabaa')}
+              className={`flex items-center gap-2 px-6 py-4 font-bold transition-all whitespace-nowrap ${activeEntity === 'mutabaa' ? 'text-indigo-700 bg-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'}`}
+            >
+              قسم المتابعة والخدمات
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -362,6 +386,13 @@ const App: React.FC = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="p-8 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest">القسم (الجدول)</label>
+                  <div className="p-4 bg-indigo-50 border-2 border-indigo-100 rounded-2xl font-black text-indigo-700">
+                    {activeEntity === 'mukafaha' ? 'قسم المكافحة' : activeEntity === 'bahth' ? 'قسم البحث الجنائي' : 'قسم المتابعة والخدمات'}
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest">رقم محضر الاستلام</label>
                   <input type="text" required value={formData.reportNumber || ''} onChange={e => setFormData({...formData, reportNumber: e.target.value})} className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 font-bold" placeholder="رقم المحضر" />
@@ -445,7 +476,7 @@ const App: React.FC = () => {
                 <div className="space-y-2">
                   <label className="text-xs font-black text-slate-500 uppercase tracking-widest">الجهة المورد منها اللوحة</label>
                   <select 
-                    value={formData.supplyingEntity || 'مكافحة'} 
+                    value={formData.supplyingEntity || (activeEntity === 'mukafaha' ? 'مكافحة' : activeEntity === 'bahth' ? 'بحث جنائي' : 'خدمات')} 
                     onChange={e => setFormData({...formData, supplyingEntity: e.target.value})} 
                     className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold"
                   >
@@ -576,7 +607,9 @@ const App: React.FC = () => {
                   </div>
                  
                  <div className="mb-4">
-                    <h2 className="text-3xl font-black mb-1 underline decoration-double underline-offset-8">كشف بيانات اللوحات الموردة والمؤرشفة</h2>
+                    <h2 className="text-3xl font-black mb-1 underline decoration-double underline-offset-8">
+                      كشف بيانات اللوحات - {activeEntity === 'mukafaha' ? 'قسم المكافحة' : activeEntity === 'bahth' ? 'قسم البحث الجنائي' : 'قسم المتابعة والخدمات'}
+                    </h2>
                     <p className="text-sm font-bold opacity-60">تاريخ الكشف: {new Date().toLocaleDateString('ar-YE')}</p>
                  </div>
               </div>
@@ -602,33 +635,36 @@ const App: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {filteredRecords.map((rec, idx) => (
-                      <tr key={rec.id} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'} hover:bg-indigo-50/30 transition-colors`}>
-                        <td className="p-4 text-center font-black border print:border-slate-200 bg-slate-100/50 print:bg-transparent text-xs">{idx + 1}</td>
-                        <td className="p-4 font-bold text-slate-600 border print:border-slate-200 text-xs">{rec.reportNumber}</td>
-                        <td className="p-4 border print:border-slate-200 font-black text-xl tracking-tighter">{rec.plateNumber}</td>
-                        <td className="p-4 text-center border print:border-slate-200">
-                           <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-lg font-black text-base print:bg-transparent print:text-black print:p-0">
-                              {rec.category}
-                           </span>
-                        </td>
-                        <td className="p-4 font-bold text-slate-600 border print:border-slate-200 text-xs">{rec.plateType}</td>
-                        <td className="p-4 text-center font-bold border print:border-slate-200 text-xs">{rec.quantity}</td>
-                        <td className="p-4 text-center font-bold border print:border-slate-200 text-xs">{rec.seizureDate}</td>
-                        <td className="p-4 text-center font-bold border print:border-slate-200 text-xs">{rec.trafficSupplyDate}</td>
-                        <td className="p-4 font-bold text-slate-600 border print:border-slate-200 text-xs">{rec.vehicleModel}</td>
-                        <td className="p-4 font-bold text-indigo-600 border print:border-slate-200 text-xs">{rec.supplyingEntity}</td>
-                        <td className="p-4 font-bold text-slate-600 border print:border-slate-200 text-xs">{rec.seizedItems}</td>
-                        <td className="p-4 text-[10px] font-medium border print:border-slate-200 break-words whitespace-pre-wrap leading-relaxed" title={rec.actionsTaken}>{rec.actionsTaken}</td>
-                        <td className="p-4 text-[10px] font-medium border print:border-slate-200">{rec.notes}</td>
-                        <td className="p-4 no-print border text-center">
-                          <div className="flex justify-center gap-1">
-                            <button type="button" onClick={() => onEdit(rec)} disabled={loading} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"><PencilSquareIcon className="w-5 h-5" /></button>
-                            <button type="button" onClick={() => onDelete(rec.id)} disabled={loading} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"><TrashIcon className="w-5 h-5" /></button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredRecords.map((rec, idx) => {
+                      const isDelivered = rec.actionsTaken?.includes('تم تسليمها لصاحبها');
+                      return (
+                        <tr key={rec.id} className={`${isDelivered ? 'bg-orange-500 text-white' : (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50') + ' hover:bg-indigo-50/30'} transition-colors`}>
+                          <td className={`p-4 text-center font-black border print:border-slate-200 ${isDelivered ? 'bg-orange-600/20' : 'bg-slate-100/50'} print:bg-transparent text-xs`}>{idx + 1}</td>
+                          <td className={`p-4 font-bold ${isDelivered ? 'text-white' : 'text-slate-600'} border print:border-slate-200 text-xs`}>{rec.reportNumber}</td>
+                          <td className="p-4 border print:border-slate-200 font-black text-xl tracking-tighter">{rec.plateNumber}</td>
+                          <td className="p-4 text-center border print:border-slate-200">
+                             <span className={`${isDelivered ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'} px-2 py-0.5 rounded-lg font-black text-base print:bg-transparent print:text-black print:p-0`}>
+                                {rec.category}
+                             </span>
+                          </td>
+                          <td className={`p-4 font-bold ${isDelivered ? 'text-white' : 'text-slate-600'} border print:border-slate-200 text-xs`}>{rec.plateType}</td>
+                          <td className="p-4 text-center font-bold border print:border-slate-200 text-xs">{rec.quantity}</td>
+                          <td className="p-4 text-center font-bold border print:border-slate-200 text-xs">{rec.seizureDate}</td>
+                          <td className="p-4 text-center font-bold border print:border-slate-200 text-xs">{rec.trafficSupplyDate}</td>
+                          <td className={`p-4 font-bold ${isDelivered ? 'text-white' : 'text-slate-600'} border print:border-slate-200 text-xs`}>{rec.vehicleModel}</td>
+                          <td className={`p-4 font-bold ${isDelivered ? 'text-white' : 'text-indigo-600'} border print:border-slate-200 text-xs`}>{rec.supplyingEntity}</td>
+                          <td className={`p-4 font-bold ${isDelivered ? 'text-white' : 'text-slate-600'} border print:border-slate-200 text-xs`}>{rec.seizedItems}</td>
+                          <td className="p-4 text-[10px] font-medium border print:border-slate-200 break-words whitespace-pre-wrap leading-relaxed" title={rec.actionsTaken}>{rec.actionsTaken}</td>
+                          <td className="p-4 text-[10px] font-medium border print:border-slate-200">{rec.notes}</td>
+                          <td className="p-4 no-print border text-center">
+                            <div className="flex justify-center gap-1">
+                              <button type="button" onClick={() => onEdit(rec)} disabled={loading} className={`p-2 ${isDelivered ? 'text-white hover:bg-white/20' : 'text-indigo-600 hover:bg-indigo-50'} rounded-lg transition-colors cursor-pointer disabled:opacity-50`}><PencilSquareIcon className="w-5 h-5" /></button>
+                              <button type="button" onClick={() => onDelete(rec.id)} disabled={loading} className={`p-2 ${isDelivered ? 'text-white hover:bg-white/20' : 'text-red-500 hover:bg-red-50'} rounded-lg transition-colors cursor-pointer disabled:opacity-50`}><TrashIcon className="w-5 h-5" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
                 {filteredRecords.length === 0 && (

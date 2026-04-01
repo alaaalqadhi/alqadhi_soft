@@ -50,22 +50,29 @@ async function createServer() {
       }
     });
 
-    app.get("/api/plates", async (req, res) => {
+    app.get("/api/plates/:entity", async (req, res) => {
+      const { entity } = req.params;
       try {
-        const plates = await prisma.plate.findMany({
-          orderBy: {
-            entryDate: 'desc'
-          }
-        });
+        let plates;
+        if (entity === "mukafaha") {
+          plates = await prisma.mukafahaPlate.findMany({ orderBy: { entryDate: 'desc' } });
+        } else if (entity === "bahth") {
+          plates = await prisma.bahthPlate.findMany({ orderBy: { entryDate: 'desc' } });
+        } else if (entity === "mutabaa") {
+          plates = await prisma.mutabaaPlate.findMany({ orderBy: { entryDate: 'desc' } });
+        } else {
+          return res.status(400).json({ error: "Invalid entity" });
+        }
         res.setHeader('Cache-Control', 'no-store');
         res.json(plates);
       } catch (err) {
-        console.error("Error fetching plates:", err);
-        res.status(500).json({ error: "Failed to fetch plates", details: String(err) });
+        console.error(`Error fetching ${entity} plates:`, err);
+        res.status(500).json({ error: `Failed to fetch ${entity} plates`, details: String(err) });
       }
     });
 
-    app.post("/api/plates", async (req, res) => {
+    app.post("/api/plates/:entity", async (req, res) => {
+      const { entity } = req.params;
       const p = req.body;
       try {
         const data = {
@@ -85,30 +92,38 @@ async function createServer() {
           notes: String(p.notes || '')
         };
 
-        await prisma.plate.upsert({
-          where: { id: p.id },
-          update: data,
-          create: {
-            id: p.id,
-            ...data
-          }
-        });
+        if (entity === "mukafaha") {
+          await prisma.mukafahaPlate.upsert({ where: { id: p.id }, update: data, create: { id: p.id, ...data } });
+        } else if (entity === "bahth") {
+          await prisma.bahthPlate.upsert({ where: { id: p.id }, update: data, create: { id: p.id, ...data } });
+        } else if (entity === "mutabaa") {
+          await prisma.mutabaaPlate.upsert({ where: { id: p.id }, update: data, create: { id: p.id, ...data } });
+        } else {
+          return res.status(400).json({ error: "Invalid entity" });
+        }
         res.json({ success: true, message: "تم الحفظ" });
       } catch (err) {
-        console.error("Error saving plate:", err);
-        res.status(500).json({ error: "Failed to save plate" });
+        console.error(`Error saving ${entity} plate:`, err);
+        res.status(500).json({ error: `Failed to save ${entity} plate` });
       }
     });
 
-    app.delete("/api/plates/:id", async (req, res) => {
+    app.delete("/api/plates/:entity/:id", async (req, res) => {
+      const { entity, id } = req.params;
       try {
-        await prisma.plate.delete({
-          where: { id: req.params.id }
-        });
+        if (entity === "mukafaha") {
+          await prisma.mukafahaPlate.delete({ where: { id } });
+        } else if (entity === "bahth") {
+          await prisma.bahthPlate.delete({ where: { id } });
+        } else if (entity === "mutabaa") {
+          await prisma.mutabaaPlate.delete({ where: { id } });
+        } else {
+          return res.status(400).json({ error: "Invalid entity" });
+        }
         res.json({ success: true, message: "تم الحذف" });
       } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Failed to delete plate" });
+        res.status(500).json({ error: `Failed to delete ${entity} plate` });
       }
     });
 
